@@ -116,19 +116,23 @@ function App() {
 
     if (isLoading) {
         return (
-            <div className="app">
-                <div className="loading">Connecting to Dojo world...</div>
+            <div className="container">
+                <div className="app">
+                    <div className="loading">Connecting to Dojo world...</div>
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="app">
-                <div className="error">
-                    <h2>Connection Error</h2>
-                    <p>{error.message}</p>
-                    <p>Make sure Katana and Torii are running.</p>
+            <div className="container">
+                <div className="app">
+                    <div className="error">
+                        <h2>Connection Error</h2>
+                        <p>{error.message}</p>
+                        <p>Make sure Katana and Torii are running.</p>
+                    </div>
                 </div>
             </div>
         );
@@ -139,76 +143,78 @@ function App() {
         : "0";
 
     return (
-        <div className="app">
-            <h1>Coin Flip</h1>
-            <p className="subtitle">On-chain prediction game built with Dojo</p>
+        <div className="container">
+            <div className="app">
+                <h1>Coin Flip</h1>
+                <p className="subtitle">On-chain prediction game built with Dojo</p>
 
-            {/* Coin Display */}
-            <div className={`coin ${coinAnimation || ""} ${isFlipping ? "flipping" : ""}`}>
-                <div className="coin-face heads">H</div>
-                <div className="coin-face tails">T</div>
-            </div>
+                {/* Coin Display */}
+                <div className={`coin ${coinAnimation || ""} ${isFlipping ? "flipping" : ""}`}>
+                    <div className="coin-face heads">H</div>
+                    <div className="coin-face tails">T</div>
+                </div>
 
-            {/* Result Display */}
-            {lastResult && !isFlipping && (
-                <div className={`result ${lastResult.won ? "win" : "lose"}`}>
-                    <div className="result-text">
-                        {lastResult.won ? "You Won!" : "You Lost!"}
+                {/* Result Display */}
+                {lastResult && !isFlipping && (
+                    <div className={`result ${lastResult.won ? "win" : "lose"}`}>
+                        <div className="result-text">
+                            {lastResult.won ? "You Won!" : "You Lost!"}
+                        </div>
+                        <div className="result-details">
+                            You picked {lastResult.prediction === 0 ? "Heads" : "Tails"} →
+                            Coin landed {lastResult.outcome === 0 ? "Heads" : "Tails"}
+                        </div>
                     </div>
-                    <div className="result-details">
-                        You picked {lastResult.prediction === 0 ? "Heads" : "Tails"} →
-                        Coin landed {lastResult.outcome === 0 ? "Heads" : "Tails"}
+                )}
+
+                {/* Buttons */}
+                <div className="buttons">
+                    <button
+                        className="flip-btn heads-btn"
+                        onClick={() => flip(0)}
+                        disabled={isFlipping}
+                    >
+                        {isFlipping ? "Flipping..." : "Heads"}
+                    </button>
+                    <button
+                        className="flip-btn tails-btn"
+                        onClick={() => flip(1)}
+                        disabled={isFlipping}
+                    >
+                        {isFlipping ? "Flipping..." : "Tails"}
+                    </button>
+                </div>
+
+                {/* Stats */}
+                <div className="stats">
+                    <h3>Your Stats</h3>
+                    <div className="stats-grid">
+                        <div className="stat">
+                            <div className="stat-value">{playerStats?.total_flips || 0}</div>
+                            <div className="stat-label">Total Flips</div>
+                        </div>
+                        <div className="stat">
+                            <div className="stat-value wins">{playerStats?.wins || 0}</div>
+                            <div className="stat-label">Wins</div>
+                        </div>
+                        <div className="stat">
+                            <div className="stat-value losses">{playerStats?.losses || 0}</div>
+                            <div className="stat-label">Losses</div>
+                        </div>
+                        <div className="stat">
+                            <div className="stat-value">{winRate}%</div>
+                            <div className="stat-label">Win Rate</div>
+                        </div>
                     </div>
                 </div>
-            )}
 
-            {/* Buttons */}
-            <div className="buttons">
-                <button
-                    className="flip-btn heads-btn"
-                    onClick={() => flip(0)}
-                    disabled={isFlipping}
-                >
-                    {isFlipping ? "Flipping..." : "Heads"}
-                </button>
-                <button
-                    className="flip-btn tails-btn"
-                    onClick={() => flip(1)}
-                    disabled={isFlipping}
-                >
-                    {isFlipping ? "Flipping..." : "Tails"}
-                </button>
-            </div>
-
-            {/* Stats */}
-            <div className="stats">
-                <h3>Your Stats</h3>
-                <div className="stats-grid">
-                    <div className="stat">
-                        <div className="stat-value">{playerStats?.total_flips || 0}</div>
-                        <div className="stat-label">Total Flips</div>
-                    </div>
-                    <div className="stat">
-                        <div className="stat-value wins">{playerStats?.wins || 0}</div>
-                        <div className="stat-label">Wins</div>
-                    </div>
-                    <div className="stat">
-                        <div className="stat-value losses">{playerStats?.losses || 0}</div>
-                        <div className="stat-label">Losses</div>
-                    </div>
-                    <div className="stat">
-                        <div className="stat-value">{winRate}%</div>
-                        <div className="stat-label">Win Rate</div>
-                    </div>
+                {/* Footer */}
+                <div className="footer">
+                    <p>Connected to Katana (local)</p>
+                    <p className="address">
+                        Account: {MASTER_ADDRESS.slice(0, 6)}...{MASTER_ADDRESS.slice(-4)}
+                    </p>
                 </div>
-            </div>
-
-            {/* Footer */}
-            <div className="footer">
-                <p>Connected to Katana (local)</p>
-                <p className="address">
-                    Account: {MASTER_ADDRESS.slice(0, 6)}...{MASTER_ADDRESS.slice(-4)}
-                </p>
             </div>
         </div>
     );
