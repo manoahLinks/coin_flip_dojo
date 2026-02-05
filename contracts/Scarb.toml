@@ -1,0 +1,25 @@
+[package]
+name = "coin_flip"
+version = "1.0.0"
+edition = "2024_07"
+
+[cairo]
+sierra-replace-ids = true
+
+[scripts]
+migrate = "sozo build && sozo migrate"
+flip = "sozo execute coin_flip-actions flip -c 0 --wait"
+
+[dependencies]
+dojo = "1.8.0"
+starknet = "2.13.1"
+
+[[target.starknet-contract]]
+build-external-contracts = ["dojo::world::world_contract::world"]
+
+[tool.scarb]
+allow-prebuilt-plugins = ["dojo_cairo_macros"]
+
+[dev-dependencies]
+cairo_test = "2.13.1"
+dojo_cairo_test = "1.8.0"
