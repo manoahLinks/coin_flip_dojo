@@ -1,6 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDojo } from "./dojo/useDojo";
 import { MASTER_ADDRESS } from "./dojo/dojoConfig";
+import {
+    apolloClient,
+    GET_PLAYER_STATS,
+    GET_LATEST_GAME,
+    PlayerStatsResponse,
+    LatestGameResponse,
+} from "./dojo/apollo";
 import "./App.css";
 
 type Prediction = 0 | 1; // 0 = Heads, 1 = Tails
@@ -24,28 +31,16 @@ function App() {
     const [isFlipping, setIsFlipping] = useState(false);
     const [coinAnimation, setCoinAnimation] = useState<"heads" | "tails" | null>(null);
 
-    // Fetch player stats
+    // Fetch player stats using Apollo Client
     const fetchPlayerStats = useCallback(async () => {
         try {
-            const response = await fetch("http://localhost:8080/graphql", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    query: `{
-                        coinFlipPlayerModels(where: { address: "${MASTER_ADDRESS}" }) {
-                            edges {
-                                node {
-                                    total_flips
-                                    wins
-                                    losses
-                                }
-                            }
-                        }
-                    }`,
-                }),
+            const { data } = await apolloClient.query<PlayerStatsResponse>({
+                query: GET_PLAYER_STATS,
+                variables: { address: MASTER_ADDRESS },
+                fetchPolicy: "network-only", // Always fetch fresh data
             });
-            const data = await response.json();
-            const player = data?.data?.coinFlipPlayerModels?.edges?.[0]?.node;
+
+            const player = data?.coinFlipPlayerModels?.edges?.[0]?.node;
             if (player) {
                 setPlayerStats({
                     total_flips: Number(player.total_flips),
@@ -55,6 +50,30 @@ function App() {
             }
         } catch (err) {
             console.error("Failed to fetch player stats:", err);
+        }
+    }, []);
+
+    // Fetch latest game result using Apollo Client
+    const fetchLatestGame = useCallback(async () => {
+        try {
+            const { data } = await apolloClient.query<LatestGameResponse>({
+                query: GET_LATEST_GAME,
+                variables: { player: MASTER_ADDRESS },
+                fetchPolicy: "network-only",
+            });
+
+            const game = data?.coinFlipGameModels?.edges?.[0]?.node;
+            if (game) {
+                return {
+                    prediction: Number(game.prediction),
+                    outcome: Number(game.outcome),
+                    won: game.won,
+                };
+            }
+            return null;
+        } catch (err) {
+            console.error("Failed to fetch latest game:", err);
+            return null;
         }
     }, []);
 
@@ -79,37 +98,9 @@ function App() {
             // Wait a moment for indexer to catch up
             await new Promise((resolve) => setTimeout(resolve, 1500));
 
-            // Fetch latest game result
-            const response = await fetch("http://localhost:8080/graphql", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    query: `{
-                        coinFlipGameModels(
-                            where: { player: "${MASTER_ADDRESS}" }
-                            order: { field: GAME_ID, direction: DESC }
-                            first: 1
-                        ) {
-                            edges {
-                                node {
-                                    prediction
-                                    outcome
-                                    won
-                                }
-                            }
-                        }
-                    }`,
-                }),
-            });
-            const data = await response.json();
-            const game = data?.data?.coinFlipGameModels?.edges?.[0]?.node;
-
-            if (game) {
-                const result: GameResult = {
-                    prediction: Number(game.prediction),
-                    outcome: Number(game.outcome),
-                    won: game.won,
-                };
+            // Fetch latest game result using Apollo
+            const result = await fetchLatestGame();
+            if (result) {
                 setLastResult(result);
                 setCoinAnimation(result.outcome === 0 ? "heads" : "tails");
             }
